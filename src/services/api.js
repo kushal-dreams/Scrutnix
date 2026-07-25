@@ -1,5 +1,5 @@
-let rawApi = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
-if (rawApi && rawApi !== '/api' && !rawApi.endsWith('/api')) {
+let rawApi = (import.meta.env.VITE_API_URL || 'https://scrutnix.onrender.com/api').replace(/\/+$/, '');
+if (rawApi && !rawApi.endsWith('/api')) {
   rawApi = `${rawApi}/api`;
 }
 const API = rawApi;
@@ -81,9 +81,28 @@ async function rawRequest(path, options = {}) {
     ...(options.headers || {})
   };
   if (!(options.body instanceof FormData)) headers['Content-Type'] = 'application/json';
-  const response = await fetch(`${API}${path}`, { ...options, headers });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || data.error || 'Request failed');
+  
+  let response;
+  try {
+    response = await fetch(`${API}${path}`, { ...options, headers });
+  } catch (err) {
+    throw new Error('Network error. Check backend connection or internet.');
+  }
+
+  const text = await response.text();
+  let data = {};
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = {};
+    }
+  }
+
+  if (!response.ok) {
+    const errorMsg = data.message || data.error || (response.status === 401 ? 'Invalid username or password' : `Request failed (${response.status})`);
+    throw new Error(errorMsg);
+  }
   return data;
 }
 
