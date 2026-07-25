@@ -1,14 +1,3 @@
-"""
-Report Routes — Scrutinix
-
-POST /api/reports          — Submit a new report (login required)
-GET  /api/reports          — List all reports (paginated, filterable)
-GET  /api/reports/:id      — Get single report detail
-POST /api/reports/:id/vote — Upvote or downvote
-POST /api/reports/:id/comment  — Add comment
-GET  /api/reports/:id/comments — Get comments
-"""
-
 import os
 import json
 from flask import Blueprint, request, jsonify, current_app
@@ -25,7 +14,6 @@ REPORTS_PER_PAGE = 10
 
 @report_bp.route('/ticker-reports')
 def get_ticker_reports():
-    """Get recent reports formatted for the live ticker (no auth required)"""
     reports = (
         Report.query
         .order_by(Report.created_at.desc())
@@ -51,7 +39,6 @@ def allowed_file(filename):
 @report_bp.route('/reports', methods=['POST'])
 @login_required
 def submit_report(current_user):
-    """Submit a new report (supports multipart/form-data for file uploads)"""
     if request.content_type and 'multipart/form-data' in request.content_type:
         report_type = request.form.get('report_type', 'sms').strip()
         phone_number = request.form.get('phone_number', '').strip() or None
@@ -72,7 +59,6 @@ def submit_report(current_user):
         additional_notes = data.get('additional_notes', '').strip() or None
         proof_files = []
 
-    # Validation
     errors = []
     valid_types = ['sms', 'whatsapp', 'email']
     valid_categories = ['job_fraud', 'spam', 'phishing', 'harassment', 'other']
@@ -84,7 +70,6 @@ def submit_report(current_user):
     if not message_description or len(message_description) < 20:
         errors.append('Description must be at least 20 characters')
 
-    # Clean phone number if provided
     if phone_number:
         phone_number = phone_number.replace(' ', '').replace('-', '').replace('+91', '')
         if not phone_number.isdigit() or len(phone_number) != 10:
@@ -93,8 +78,6 @@ def submit_report(current_user):
     if errors:
         return jsonify({'success': False, 'message': '; '.join(errors), 'errors': errors}), 400
 
-    # ── Duplicate Report Prevention ──────────────────────
-    # A user may only submit ONE report per phone number or email.
     if phone_number:
         existing = Report.query.filter_by(
             user_id=current_user.id, phone_number=phone_number
@@ -115,9 +98,8 @@ def submit_report(current_user):
                 'message': 'You have already reported this email address.',
             }), 409
 
-    # Handle proof image uploads
     proof_urls = []
-    for f in proof_files[:5]:  # Max 5 images
+    for f in proof_files[:5]:
         if f and f.filename and allowed_file(f.filename):
             filename = secure_filename(f.filename)
             filename = f'{current_user.id}_{filename}'
@@ -125,7 +107,6 @@ def submit_report(current_user):
             f.save(upload_path)
             proof_urls.append(f'/uploads/{filename}')
 
-    # Create report
     report = Report(
         user_id=current_user.id,
         report_type=report_type,
@@ -140,7 +121,6 @@ def submit_report(current_user):
     db.session.add(report)
     db.session.commit()
 
-    # Push to live feed
     from routes.live_feed import push_event
     push_event({
         'type': report_type.upper(),
@@ -157,23 +137,18 @@ def submit_report(current_user):
 
 @report_bp.route('/reports')
 def get_reports():
-    """Get paginated, filterable reports"""
     page = request.args.get('page', 1, type=int)
     category = request.args.get('category', '').strip()
     sort = request.args.get('sort', 'recent').strip()
 
     query = Report.query
 
-    # Filter by category
     if category:
         query = query.filter_by(category=category)
 
-    # Sort
     if sort == 'popular':
         query = query.order_by(Report.upvotes.desc())
-    elif sort == 'commented':
-        query = query.order_by(Report.created_at.desc())  # TODO: sort by comment count
-    else:  # recent
+    else:
         query = query.order_by(Report.created_at.desc())
 
     pagination = query.paginate(page=page, per_page=REPORTS_PER_PAGE, error_out=False)
@@ -193,7 +168,6 @@ def get_reports():
 
 @report_bp.route('/reports/<int:report_id>')
 def get_report_detail(report_id):
-    """Get single report details"""
     report = Report.query.get(report_id)
     if not report:
         return jsonify({'error': 'Report not found'}), 404
@@ -209,7 +183,6 @@ def get_report_detail(report_id):
 @report_bp.route('/reports/<int:report_id>/vote', methods=['POST'])
 @login_required
 def vote_report(current_user, report_id):
-    """Upvote or downvote a report"""
     report = Report.query.get(report_id)
     if not report:
         return jsonify({'error': 'Report not found'}), 404
@@ -223,7 +196,6 @@ def vote_report(current_user, report_id):
 
     if existing:
         if existing.vote_type == vote_type:
-            # Remove vote (toggle off)
             if vote_type == 'up':
                 report.upvotes = max(0, report.upvotes - 1)
             else:
@@ -238,7 +210,6 @@ def vote_report(current_user, report_id):
                 'user_vote': None,
             })
         else:
-            # Switch vote
             if existing.vote_type == 'up':
                 report.upvotes = max(0, report.upvotes - 1)
             else:
@@ -257,7 +228,6 @@ def vote_report(current_user, report_id):
                 'user_vote': vote_type,
             })
     else:
-        # New vote
         vote = Vote(report_id=report_id, user_id=current_user.id, vote_type=vote_type)
         db.session.add(vote)
         if vote_type == 'up':
@@ -276,7 +246,6 @@ def vote_report(current_user, report_id):
 
 @report_bp.route('/reports/<int:report_id>/comments')
 def get_comments(report_id):
-    """Get comments for a report"""
     report = Report.query.get(report_id)
     if not report:
         return jsonify({'error': 'Report not found'}), 404
@@ -297,7 +266,6 @@ def get_comments(report_id):
 @report_bp.route('/reports/<int:report_id>/comment', methods=['POST'])
 @login_required
 def add_comment(current_user, report_id):
-    """Add a comment to a report"""
     report = Report.query.get(report_id)
     if not report:
         return jsonify({'error': 'Report not found'}), 404

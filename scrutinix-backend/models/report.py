@@ -1,11 +1,3 @@
-"""
-Report, Vote, Comment Models — Scrutinix
-
-Supports 3 report types (sms/whatsapp/email)
-Upvote/downvote with unique constraint per user
-1-level comment replies via parent_comment_id
-"""
-
 import json
 from datetime import datetime, timezone
 from extensions import db
@@ -16,19 +8,18 @@ class Report(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    report_type = db.Column(db.String(20), nullable=False)        # sms / whatsapp / email
+    report_type = db.Column(db.String(20), nullable=False)
     phone_number = db.Column(db.String(20), nullable=True, index=True)
     email_id = db.Column(db.String(255), nullable=True, index=True)
     message_description = db.Column(db.Text, nullable=False)
     job_description = db.Column(db.Text, nullable=True)
-    category = db.Column(db.String(50), nullable=False)           # job_fraud/spam/phishing/harassment/other
-    proof_image_urls_json = db.Column(db.Text, nullable=True)     # JSON array of URLs
+    category = db.Column(db.String(50), nullable=False)
+    proof_image_urls_json = db.Column(db.Text, nullable=True)
     additional_notes = db.Column(db.Text, nullable=True)
     upvotes = db.Column(db.Integer, default=0)
     downvotes = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    # Relationships
     votes = db.relationship('Vote', backref='report', lazy='dynamic')
     comments_list = db.relationship('Comment', backref='report', lazy='dynamic')
 
@@ -61,14 +52,12 @@ class Report(db.Model):
         return self.CATEGORY_LABELS.get(self.category, self.category)
 
     def masked_phone(self):
-        """Mask phone for public display: +91-98XX-XX5678"""
         p = self.phone_number or ''
         if len(p) >= 10:
             return f'+91-{p[:2]}XX-XX{p[-4:]}'
         return p
 
     def to_dict(self, mask_phone=False, current_user_id=None):
-        # Check current user's vote
         user_vote = None
         if current_user_id:
             vote = Vote.query.filter_by(report_id=self.id, user_id=current_user_id).first()
@@ -99,13 +88,12 @@ class Report(db.Model):
 
 
 class Vote(db.Model):
-    """One vote per user per report (upvote or downvote)"""
     __tablename__ = 'votes'
 
     id = db.Column(db.Integer, primary_key=True)
     report_id = db.Column(db.Integer, db.ForeignKey('reports.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    vote_type = db.Column(db.String(10), nullable=False)  # 'up' or 'down'
+    vote_type = db.Column(db.String(10), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
@@ -114,7 +102,6 @@ class Vote(db.Model):
 
 
 class Comment(db.Model):
-    """Comments on reports, with 1-level reply support"""
     __tablename__ = 'comments'
 
     id = db.Column(db.Integer, primary_key=True)

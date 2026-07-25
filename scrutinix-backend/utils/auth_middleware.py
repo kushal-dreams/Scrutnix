@@ -1,7 +1,3 @@
-"""
-Auth Middleware — JWT token generation and verification
-"""
-
 import jwt
 import functools
 from datetime import datetime, timedelta, timezone
@@ -10,7 +6,6 @@ from config import Config
 
 
 def generate_token(user_id):
-    """Generate a JWT token for a user"""
     payload = {
         'user_id': user_id,
         'exp': datetime.now(timezone.utc) + timedelta(hours=Config.JWT_EXPIRY_HOURS),
@@ -20,7 +15,6 @@ def generate_token(user_id):
 
 
 def decode_token(token):
-    """Decode a JWT token, returns user_id or None"""
     try:
         payload = jwt.decode(token, Config.JWT_SECRET, algorithms=['HS256'])
         return payload.get('user_id')
@@ -29,7 +23,6 @@ def decode_token(token):
 
 
 def login_required(f):
-    """Decorator that requires a valid JWT token"""
     @functools.wraps(f)
     def decorated(*args, **kwargs):
         auth_header = request.headers.get('Authorization', '')
@@ -51,7 +44,6 @@ def login_required(f):
 
 
 def get_optional_user():
-    """Try to get current user from token, returns None if not authenticated"""
     auth_header = request.headers.get('Authorization', '')
     if not auth_header.startswith('Bearer '):
         return None

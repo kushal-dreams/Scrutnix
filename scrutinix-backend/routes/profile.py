@@ -1,10 +1,3 @@
-"""
-Profile Routes — Scrutinix
-
-GET  /api/profile/:username — Public profile with stats
-PUT  /api/profile           — Update own profile (login required)
-"""
-
 from flask import Blueprint, request, jsonify
 from extensions import db
 from models.user import User
@@ -16,18 +9,15 @@ profile_bp = Blueprint('profile', __name__, url_prefix='/api')
 
 @profile_bp.route('/profile/<username>')
 def get_profile(username):
-    """Get public profile by username"""
     user = User.query.filter_by(username=username).first()
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
-    # Calculate stats
     reports = Report.query.filter_by(user_id=user.id).order_by(Report.created_at.desc()).all()
     total_reports = len(reports)
     total_upvotes = sum(r.upvotes for r in reports)
     total_comments = Comment.query.filter_by(user_id=user.id).count()
 
-    # Community score
     unique_numbers = len(set(r.phone_number for r in reports if r.phone_number))
     report_points = min(total_reports * 10, 50)
     upvote_points = min(total_upvotes * 2, 30)
@@ -62,7 +52,6 @@ def get_profile(username):
 @profile_bp.route('/profile', methods=['PUT'])
 @login_required
 def update_profile(current_user):
-    """Update own profile (nickname, avatar)"""
     data = request.get_json() or {}
 
     if 'nickname' in data:

@@ -1,12 +1,3 @@
-"""
-Search Routes — Scrutinix
-
-GET /api/search?type=phone&q=9876543210
-GET /api/search?type=email&q=scam@example.com
-
-Returns risk score + breakdown using the 5-component algorithm.
-"""
-
 from flask import Blueprint, request, jsonify
 from models.report import Report
 from utils.risk_score_phone import calculate_risk_score
@@ -23,7 +14,6 @@ def search():
         return jsonify({'error': 'Query is required (use ?q=...)'}), 400
 
     if search_type == 'phone':
-        # Clean phone number
         clean = query.replace(' ', '').replace('-', '')
         if clean.startswith('+91'):
             clean = clean[3:]

@@ -1,11 +1,3 @@
-"""
-OTP Model — Scrutinix
-
-Stores OTP codes with expiration.
-In production, use Twilio Verify instead of storing codes.
-For development, OTP is printed to console.
-"""
-
 from datetime import datetime, timedelta, timezone
 from extensions import db
 
@@ -32,7 +24,6 @@ class OTP(db.Model):
         return otp
 
     def is_valid(self):
-        """Check if OTP is not expired and not used"""
         now = datetime.now(timezone.utc)
         expires = self.expires_at
         if expires and expires.tzinfo is None:
