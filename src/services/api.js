@@ -1,4 +1,8 @@
-const API = import.meta.env.VITE_API_URL || '/api';
+let rawApi = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '');
+if (rawApi && rawApi !== '/api' && !rawApi.endsWith('/api')) {
+  rawApi = `${rawApi}/api`;
+}
+const API = rawApi;
 
 function normalizeCategory(report) {
   if (report.category_raw) return report.category_raw;
