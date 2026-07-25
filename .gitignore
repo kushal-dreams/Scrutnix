@@ -1,0 +1,76 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+*.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+scrutinix-backend/venv/
+
+# Instance / database
+scrutinix-backend/instance/
+*.db
+
+# Credentials & secrets
+scrutinix-backend/credentials.txt
+scrutinix-backend/.env
+
+# Uploads (user data — download separately)
+scrutinix-backend/uploads/
+
+# Datasets (large files — download separately)
+scrutinix-backend/datasets/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ML model (large binary — download separately)
+scrutinix-backend/models/job_fraud_model.pkl
+
+# Vercel
+.vercel/
+
+# Backup source folders
+src_before_reporting_restore/
+src_original_before_scrutnix_ui/
+
+# Dev batch scripts
+setup_backend.bat
+start_scrutinix.bat
+
+# Internal docs (not needed in repo)
+FRONTEND_INTEGRATION.md
+PARTNER_SETUP.md
+SCRUTINIX_PROJECT_DOCUMENTATION.md
+scrutinix-backend/RISK_SCORE_EXPLAINED.md
+scrutinix-backend/RISK_SCORE_FOR_VIVA.md
+scrutinix-backend/credentials.txt
+scrutinix-backend/otp.log
+scrutinix-backend/test_model_quick.py
