@@ -9,9 +9,13 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    cors_origins = os.getenv("CORS_ORIGINS", "*")
+    if cors_origins != "*":
+        cors_origins = [o.strip() for o in cors_origins.split(",")]
+
     CORS(app, resources={
         r"/api/*": {
-            "origins": ["http://localhost:3000", "http://localhost:5173"],
+            "origins": cors_origins,
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"],
         }
@@ -52,8 +56,9 @@ def create_app():
     return app
 
 
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     port = Config.PORT
     print(f'\n  Scrutinix Backend Running on http://localhost:{port}')
     print('  OTP codes print to this console\n')
