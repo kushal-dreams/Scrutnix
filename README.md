@@ -3,7 +3,7 @@
 **Community-powered scam intelligence platform for India.**  
 Search phone numbers, report scams, and analyze job descriptions with NLP — built to protect students and job seekers.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR_USERNAME/scrutnix)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kushal-dreams/Scrutnix)
 
 ---
 
