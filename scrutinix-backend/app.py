@@ -9,13 +9,9 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    cors_origins = os.getenv("CORS_ORIGINS", "*")
-    if cors_origins != "*":
-        cors_origins = [o.strip() for o in cors_origins.split(",")]
-
     CORS(app, resources={
         r"/api/*": {
-            "origins": cors_origins,
+            "origins": "*",
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"],
         }
@@ -52,6 +48,15 @@ def create_app():
         import models
         db.create_all()
         print('[OK] Database tables created/verified')
+        
+        try:
+            from models.user import User
+            if User.query.count() == 0:
+                print('[AUTO-SEED] Database empty. Seeding initial data...')
+                from seed_data import seed
+                seed()
+        except Exception as e:
+            print(f'[AUTO-SEED WARNING] {e}')
 
     return app
 

@@ -26,11 +26,13 @@ export function App() {
     try {
       const [statsData, reportsData] = await Promise.all([api('/stats'), api('/reports')]);
       setStats(statsData);
-      setReports(reportsData.reports?.length ? reportsData.reports : DEMO_REPORTS);
+      if (reportsData?.reports) {
+        setReports(reportsData.reports.length ? reportsData.reports : DEMO_REPORTS);
+      }
     } catch (error) {
+      console.warn('Backend connection warning:', error);
       setStats(DEMO_STATS);
       setReports(DEMO_REPORTS);
-      notify('Sample data loaded because the backend is offline');
     }
   };
 
