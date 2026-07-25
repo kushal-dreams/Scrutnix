@@ -106,7 +106,7 @@ Each report contributes evidence through: **severity** · **exponential recency 
 
 ## Authors
 
-Built by **Kushal** and **Numaya**.
+Built by **Kushal**.
 
 ## License
 
